@@ -86,3 +86,8 @@ def lambda_handler(event, context):
 
     for fqdn, expiry_date, remaining_days  in target_list:
         post_slack(fqdn, expiry_date, remaining_days)
+
+    return {
+        'statusCode': 200,
+        'body': json.dumps('done')
+    }
