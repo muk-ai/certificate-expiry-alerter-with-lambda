@@ -31,8 +31,9 @@ def ssl_expiry_datetime(host, port=443):
         conn.connect((host, port))
         ssl_info = conn.getpeercert()
         res = datetime.datetime.strptime(ssl_info['notAfter'], ssl_date_fmt)
-    except socket.error:
+    except socket.error as error:
         logger.error('socket error')
+        post_error_to_slack(error, host)
 
     return res
 
@@ -61,6 +62,42 @@ def post_slack(fqdn, expiry_date, remaining_days):
                 },
             ],
             'color': 'warning'
+        }]
+    }
+    data = "payload=" + json.dumps(slack_message)
+    request = urllib.request.Request(url, data.encode('utf-8'))
+    try:
+        with urllib.request.urlopen(request) as response:
+            _response_body = response.read().decode('utf-8')
+    except urllib.request.HTTPError as e:
+        logger.error('Request failed: {} {}'.format(e.code, e.reason))
+    except urllib.request.URLError as e:
+        logger.error('Server connection failed: {}'.format(e.reason))
+
+def post_error_to_slack(error, host='unknown'):
+    url = os.environ['SLACK_URL']
+    slack_message = {
+        'icon_emoji': ':eye-in-speech-bubble:',
+        'text': 'error occurred',
+        'attachments': [{
+            'fallback': 'fallback text',
+            'fields': [
+                {
+                    'title': 'error',
+                    'value': str(error),
+                },
+                {
+                    'title': 'type',
+                    'value': str(type(error)),
+                    'short': True
+                },
+                {
+                    'title': 'FQDN',
+                    'value': host,
+                    'short': True
+                }
+            ],
+            'color': 'danger'
         }]
     }
     data = "payload=" + json.dumps(slack_message)
