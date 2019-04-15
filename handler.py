@@ -111,8 +111,15 @@ def post_error_to_slack(error, host='unknown'):
         logger.error('Server connection failed: {}'.format(e.reason))
 
 def lambda_handler(event, context):
+    if event is None or type(event) is not dict:
+        post_error_to_slack("event is not dictionary")
+        return
+    fqdn_list = event.get('fqdn_list', [])
+    if len(fqdn_list) == 0:
+        post_error_to_slack("event['fqdn_list'] is empty")
+        return
+
     threshold_days = int(os.environ.get('DAYS', DEFAULT_DAYS))
-    fqdn_list = event['fqdn_list']
     target_list = []
     for fqdn in fqdn_list:
         expiry_date = ssl_expiry_datetime(fqdn)
