@@ -10,7 +10,6 @@ import urllib.request
 Please set the following environment variables
 
 SLACK_URL: incomming webhook url
-FQDN_LIST: comma-separated values
 DAYS: threshold
 '''
 
@@ -73,8 +72,8 @@ def post_slack(fqdn, expiry_date, remaining_days):
         logger.error('Server connection failed: {}'.format(e.reason))
 
 def lambda_handler(event, context):
-    fqdn_list = os.environ['FQDN_LIST'].split(',')
     threshold_days = int(os.environ['DAYS'])
+    fqdn_list = event['fqdn_list']
     target_list = []
     for fqdn in fqdn_list:
         expiry_date = ssl_expiry_datetime(fqdn)
