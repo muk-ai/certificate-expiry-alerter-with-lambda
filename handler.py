@@ -13,6 +13,8 @@ SLACK_URL: incomming webhook url
 DAYS: threshold
 '''
 
+DEFAULT_DAYS = 28
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -72,7 +74,7 @@ def post_slack(fqdn, expiry_date, remaining_days):
         logger.error('Server connection failed: {}'.format(e.reason))
 
 def lambda_handler(event, context):
-    threshold_days = int(os.environ['DAYS'])
+    threshold_days = int(os.environ.get('DAYS', DEFAULT_DAYS))
     fqdn_list = event['fqdn_list']
     target_list = []
     for fqdn in fqdn_list:
