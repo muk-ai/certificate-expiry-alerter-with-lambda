@@ -37,8 +37,7 @@ def ssl_expiry_datetime(host, port=443):
 
     return res
 
-def post_slack(fqdn, expiry_date, remaining_days):
-    url = os.environ['SLACK_URL']
+def post_expiry_alert_to_slack(fqdn, expiry_date, remaining_days):
     slack_message = {
         'icon_emoji': ':eye-in-speech-bubble:',
         'text': '証明書の期限が迫っていますが自動更新が失敗しているようです',
@@ -64,18 +63,9 @@ def post_slack(fqdn, expiry_date, remaining_days):
             'color': 'warning'
         }]
     }
-    data = "payload=" + json.dumps(slack_message)
-    request = urllib.request.Request(url, data.encode('utf-8'))
-    try:
-        with urllib.request.urlopen(request) as response:
-            _response_body = response.read().decode('utf-8')
-    except urllib.request.HTTPError as e:
-        logger.error('Request failed: {} {}'.format(e.code, e.reason))
-    except urllib.request.URLError as e:
-        logger.error('Server connection failed: {}'.format(e.reason))
+    post_to_slack(slack_message)
 
 def post_error_to_slack(error, host='unknown'):
-    url = os.environ['SLACK_URL']
     slack_message = {
         'icon_emoji': ':eye-in-speech-bubble:',
         'text': 'error occurred',
@@ -100,6 +90,10 @@ def post_error_to_slack(error, host='unknown'):
             'color': 'danger'
         }]
     }
+    post_to_slack(slack_message)
+
+def post_to_slack(slack_message):
+    url = os.environ['SLACK_URL']
     data = "payload=" + json.dumps(slack_message)
     request = urllib.request.Request(url, data.encode('utf-8'))
     try:
@@ -130,7 +124,7 @@ def lambda_handler(event, context):
             target_list.append((fqdn, expiry_date, delta.days))
 
     for fqdn, expiry_date, remaining_days  in target_list:
-        post_slack(fqdn, expiry_date, remaining_days)
+        post_expiry_alert_to_slack(fqdn, expiry_date, remaining_days)
 
     return {
         'statusCode': 200,
