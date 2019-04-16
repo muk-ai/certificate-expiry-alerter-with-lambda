@@ -7,10 +7,10 @@ import logging
 import urllib.request
 
 '''
-Please set the following environment variables
+following environment variables are available
 
 SLACK_URL: incomming webhook url
-DAYS: threshold
+DAYS: threshold (default: 28)
 '''
 
 DEFAULT_DAYS = 28
