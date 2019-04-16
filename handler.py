@@ -32,8 +32,13 @@ def ssl_expiry_datetime(host, port=443):
         ssl_info = conn.getpeercert()
         res = datetime.datetime.strptime(ssl_info['notAfter'], ssl_date_fmt)
     except socket.error as error:
-        logger.error('socket error')
+        logger.error('socket.error')
         post_error_to_slack(error, host)
+    except ssl.SSLError as error:
+        logger.error('ssl.SSLError')
+        post_error_to_slack(error, host)
+    except:
+        post_error_to_slack('unexpected error', host)
 
     return res
 
